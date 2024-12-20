@@ -8,6 +8,7 @@ const App = () => {
   const [description, setDescription] = useState('');
   const [qtd, setQtd] = useState('');
   const [image, setImage] = useState(null);
+  const [editingProductId, setEditingProductId] = useState(null);
 
   useEffect(() => {
     fetchProdutos();
@@ -76,6 +77,37 @@ const App = () => {
     }
   };
 
+  const updateProduto = async () => {
+    if (!name || !description || !qtd) {
+      Alert.alert('Erro', 'Preencha todos os campos');
+      return;
+    }
+
+    const produto = { name, description, qtd, image };
+
+    try {
+      const response = await fetch(`http://10.0.0.106:3000/products/${editingProductId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(produto),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      fetchProdutos();
+      setName('');
+      setDescription('');
+      setQtd('');
+      setImage(null);
+      setEditingProductId(null);
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      Alert.alert('Erro', 'Falha ao atualizar produto. Verifique a URL e o servidor.');
+    }
+  };
+
   const deleteProduto = async (id) => {
     try {
       const response = await fetch(`http://10.0.0.106:3000/products/${id}`, {
@@ -91,10 +123,19 @@ const App = () => {
     }
   };
 
+  const editProduto = (produto) => {
+    setName(produto.name);
+    setDescription(produto.description);
+    setQtd(produto.qtd.toString());
+    setImage(produto.image);
+    setEditingProductId(produto._id);
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.item}>
       <Text style={styles.title}>{item.name}</Text>
-      <Text>{item.description}</Text>
+      <Text>Descrição: {item.description}</Text>
+      <Text>Quantidade: {item.qtd}</Text>
       {item.image && (
         <Image
           source={{ uri: `data:image/png;base64,${item.image}` }}
@@ -102,6 +143,7 @@ const App = () => {
         />
       )}
       <Button title="Excluir" onPress={() => deleteProduto(item._id)} />
+      <Button title="Editar" onPress={() => editProduto(item)} />
     </View>
   );
 
@@ -133,7 +175,10 @@ const App = () => {
           style={styles.previewImage}
         />
       )}
-      <Button title="Adicionar Produto" onPress={addProduto} />
+      <Button
+        title={editingProductId ? "Atualizar Produto" : "Adicionar Produto"}
+        onPress={editingProductId ? updateProduto : addProduto}
+      />
       <FlatList
         data={produtos}
         renderItem={renderItem}
@@ -147,11 +192,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#121212',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color: '#fff',
   },
   input: {
     height: 40,
@@ -160,20 +207,22 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 10,
+    backgroundColor: '#333',
+    color: '#fff',
   },
   item: {
-    backgroundColor: '#f9c2ff',
+    backgroundColor: '#3b3b3b',
     padding: 20,
     marginVertical: 8,
     borderRadius: 10,
   },
   title: {
-    fontSize: 18,
+    fontSize: 22,
     color: 'white',
   },
   image: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
     marginTop: 10,
     marginBottom: 10,
   },
