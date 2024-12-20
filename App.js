@@ -40,9 +40,9 @@ const App = () => {
       quality: 1,
       base64: true,
     });
-    console.log(result, "\n\n", result.assets)
+
     if (!result.canceled) {
-      setImage(result.assets[0].base64);
+      setImage(result.assets ? result.assets[0].base64 : result.base64);
     }
   };
 
@@ -54,7 +54,6 @@ const App = () => {
 
     const produto = { name, description, qtd, image };
 
-    console.log(produto)
     try {
       const response = await fetch('http://10.0.0.106:3000/products', {
         method: 'POST',
@@ -96,7 +95,12 @@ const App = () => {
     <View style={styles.item}>
       <Text style={styles.title}>{item.name}</Text>
       <Text>{item.description}</Text>
-      {item.image && <Image source={{uri: "data:image/png;base64,"+item.image}} /> }
+      {item.image && (
+        <Image
+          source={{ uri: `data:image/png;base64,${item.image}` }}
+          style={styles.image}
+        />
+      )}
       <Button title="Excluir" onPress={() => deleteProduto(item._id)} />
     </View>
   );
@@ -123,6 +127,12 @@ const App = () => {
         onChangeText={setQtd}
       />
       <Button title="Selecionar Foto" onPress={pickImageAsync} />
+      {image && (
+        <Image
+          source={{ uri: `data:image/png;base64,${image}` }}
+          style={styles.previewImage}
+        />
+      )}
       <Button title="Adicionar Produto" onPress={addProduto} />
       <FlatList
         data={produtos}
@@ -162,8 +172,16 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   image: {
-    maxWidth: 20,
-    maxHeight: 20,
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    marginBottom: 10,
   }
 });
 
